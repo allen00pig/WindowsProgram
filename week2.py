@@ -47,11 +47,13 @@ a.set("HI")
 mylabel2 = tk.Label(root,textvariable=a,font=('Arial',20))
 mylabel2.pack()
 
-radio_btn1 = tk.Radiobutton(root,text = 'APPLE')
+vari = tk.StringVar()
+
+radio_btn1 = tk.Radiobutton(root,text = 'APPLE',variable=vari,value="apple",padx=3,pady=3)
 radio_btn1.pack()
 radio_btn1.select()
 
-radio_btn2 = tk.Radiobutton(root,text='Banana')
+radio_btn2 = tk.Radiobutton(root,text='Banana',variable=vari,value="banana",padx=3,pady=3)
 radio_btn2.pack()
 
 root.mainloop()  # 放在主迴圈中
