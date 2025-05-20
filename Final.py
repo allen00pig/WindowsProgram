@@ -1,7 +1,5 @@
 import sys
 import random
-import os
-import PyQt6
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QGridLayout,
     QPushButton, QMessageBox, QVBoxLayout, QLabel
@@ -9,7 +7,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 
 class Cell(QPushButton):
-    def __init__(self, x, y): # Cell class
+    def __init__(self, x, y):
         super().__init__()
         self.x = x
         self.y = y
@@ -35,14 +33,14 @@ class Minesweeper(QMainWindow):
         self.init_ui()
 
     def init_ui(self):
-        self.setWindowTitle('PyQt6 踩地雷') 
+        self.setWindowTitle('PyQt6 踩地雷')
 
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         self.layout = QVBoxLayout(central_widget)
 
-        self.status_label = QLabel('遊戲進行中...') # Status label
-        self.layout.addWidget(self.status_label) 
+        self.status_label = QLabel('遊戲進行中...')
+        self.layout.addWidget(self.status_label)
 
         self.grid = QGridLayout()
         self.layout.addLayout(self.grid)
@@ -51,7 +49,7 @@ class Minesweeper(QMainWindow):
         for x in range(self.rows):
             for y in range(self.cols):
                 cell = self.cells[x][y]
-                cell.clicked.connect(lambda _, cx=x, cy=y: self.reveal_cell(cx, cy))
+                cell.clicked.connect(lambda _, cx=x, cy=y: self.handle_click(cx, cy))
                 cell.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
                 cell.customContextMenuRequested.connect(lambda _, cx=x, cy=y: self.toggle_flag(cx, cy))
                 self.grid.addWidget(cell, x, y)
@@ -69,7 +67,17 @@ class Minesweeper(QMainWindow):
         if cell.is_revealed:
             return
         cell.is_flagged = not cell.is_flagged
-        cell.setText('🚩' if cell.is_flagged else '') 
+        cell.setText('🚩' if cell.is_flagged else '')
+
+    def handle_click(self, x, y):
+        cell = self.cells[x][y]
+        if cell.is_flagged or cell.is_revealed:
+            return
+
+        self.reveal_cell(x, y)
+
+        if self.check_win():
+            self.game_over(True)
 
     def reveal_cell(self, x, y):
         cell = self.cells[x][y]
@@ -91,9 +99,6 @@ class Minesweeper(QMainWindow):
             cell.setText('')
             for nx, ny in self.get_neighbors(x, y):
                 self.reveal_cell(nx, ny)
-
-        if self.check_win():
-            self.game_over(True)
 
     def count_adjacent_mines(self, x, y):
         return sum(1 for nx, ny in self.get_neighbors(x, y) if self.cells[nx][ny].is_mine)
