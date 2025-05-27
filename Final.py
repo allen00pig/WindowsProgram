@@ -2,7 +2,7 @@ import sys
 import random
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QGridLayout,
-    QPushButton, QMessageBox, QVBoxLayout, QLabel
+    QPushButton, QMessageBox, QVBoxLayout, QLabel, QComboBox  # 新增 QComboBox
 )
 from PyQt6.QtCore import Qt
 
@@ -39,6 +39,12 @@ class Minesweeper(QMainWindow):
         self.setCentralWidget(central_widget)
         self.layout = QVBoxLayout(central_widget)
 
+        # 新增難度選擇
+        self.difficulty_box = QComboBox()
+        self.difficulty_box.addItems(['簡單', '普通', '困難'])
+        self.difficulty_box.currentIndexChanged.connect(self.change_difficulty)
+        self.layout.addWidget(self.difficulty_box)
+
         self.status_label = QLabel('遊戲進行中...')
         self.layout.addWidget(self.status_label)
 
@@ -55,6 +61,42 @@ class Minesweeper(QMainWindow):
                 self.grid.addWidget(cell, x, y)
 
         self.place_mines()
+
+    def change_difficulty(self, index):
+        # 根據難度設定 rows, cols, mines
+        if index == 0:  # 簡單
+            self.rows, self.cols, self.total_mines = 8, 8, 10
+        elif index == 1:  # 普通
+            self.rows, self.cols, self.total_mines = 12, 12, 25
+        else:  # 困難
+            self.rows, self.cols, self.total_mines = 16, 16, 50
+
+        # 移除舊格子
+        for i in reversed(range(self.grid.count())):
+            widget = self.grid.itemAt(i).widget()
+            if widget is not None:
+                widget.setParent(None)
+
+        # 重新建立格子
+        self.cells = [[Cell(x, y) for y in range(self.cols)] for x in range(self.rows)]
+        for x in range(self.rows):
+            for y in range(self.cols):
+                cell = self.cells[x][y]
+                cell.clicked.connect(lambda _, cx=x, cy=y: self.handle_click(cx, cy))
+                cell.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+                cell.customContextMenuRequested.connect(lambda _, cx=x, cy=y: self.toggle_flag(cx, cy))
+                self.grid.addWidget(cell, x, y)
+
+        self.status_label.setText('遊戲進行中...')
+        self.place_mines()
+
+        # 根據難度調整視窗大小
+        if index == 0:
+            self.resize(350, 400)
+        elif index == 1:
+            self.resize(500, 550)
+        else:
+            self.resize(650, 700)
 
     def place_mines(self):
         positions = [(x, y) for x in range(self.rows) for y in range(self.cols)]
